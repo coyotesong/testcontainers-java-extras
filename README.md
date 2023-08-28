@@ -1,4 +1,4 @@
-# extra-testcontainers-java
+# testcontainers-java-extras
 
 This repository contains:
 - JdbcContainer hamcrest matchers
