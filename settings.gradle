@@ -1,0 +1,44 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.14.1"
+        classpath "com.gradle:common-custom-user-data-gradle-plugin:1.11.1"
+        classpath "org.gradle.toolchains:foojay-resolver:0.7.0"
+    }
+}
+
+// apply plugin: 'com.gradle.enterprise'
+apply plugin: "com.gradle.common-custom-user-data-gradle-plugin"
+// apply plugin: "org.gradle.toolchains.foojay-resolver-convention"  // requires gradle 7.6+
+
+rootProject.name = 'testcontainers-java-extras'
+
+include 'bom'
+
+include 'testcontainers-java-extras'
+project(':testcontainers-java-extras').projectDir = "$rootDir/core" as File
+
+
+file('modules').eachDir { dir ->
+    include dir.name
+    project(":${dir.name}").projectDir = dir
+}
+
+// include ':docs:examples:junit4:generic'
+// include ':docs:examples:junit4:redis'
+// include ':docs:examples:junit5:redis'
+// include ':docs:examples:spock:redis'
+
+include 'test-support'
+
+ext.isCI = System.getenv("CI") != null
+
+buildCache {
+    local {
+        enabled = !isCI
+    }
+}

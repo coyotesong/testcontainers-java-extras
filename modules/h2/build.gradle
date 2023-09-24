@@ -1,0 +1,13 @@
+description = "Testcontainers-Java-Extras :: JDBC :: H2"
+
+dependencies {
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+    compileOnly 'com.google.auto.service:auto-service:1.1.1'
+
+    api project(':jdbc')
+
+    // testImplementation('org.testcontainers:jdbc-test')
+    testRuntimeOnly 'com.h2database:h2:2.2.220'
+
+    compileOnly 'org.jetbrains:annotations:24.0.1'
+}

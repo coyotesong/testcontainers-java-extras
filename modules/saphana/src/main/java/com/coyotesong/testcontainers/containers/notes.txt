@@ -1,0 +1,44 @@
+/**
+ * TestContainer for SAP HANA Express databases
+ *
+ * Note: URL could contain 'failOver'.
+ *
+ *    // https://hub.docker.com/r/saplabs/hanaexpress
+ *    // https://www.sap.com/docs/download/cmp/2016/06/sap-hana-express-dev-agmt-and-exhibit.pdf
+ *
+ * error: "ERROR: A URL for retrieving the SYSTEM user passwords MUST be provided via --passwords-url or --master-password."
+ *
+ * Requirements in /etc/sysctl.conf file:
+ *   fs.file-max=20000000
+ *   fs.aio-max-nr=262144
+ *   vm.memory_failure_early_kill=1
+ *   vm.max_map_count=135217728
+ *   net.ipv4.ip_local_port_range=40000 60999
+ *
+ * Docker command line:
+ * sudo docker run -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 -v /data/<directory_name>:/hana/mounts \
+ * --ulimit nofile=1048576:1048576 \
+ * --sysctl kernel.shmmax=1073741824 \
+ * --sysctl net.ipv4.ip_local_port_range='40000 60999' \
+ * --sysctl kernel.shmmni=524288 \
+ * --sysctl kernel.shmall=8388608 \
+ * --name <container_name> \
+ * store/saplabs/hanaexpress:<tag> \
+ * --passwords-url <file://<path_to_json_file> OR http/https://<url_to_json_file>> \
+ * --agree-to-sap-license
+ *
+ * sudo docker run store/saplabs/hanaexpress:<tag> -h
+ * usage: [options]
+ * --dont-check-consistency Skip consistency check between mount points
+ * --dont-check-mount-points Skip check for allowed mount points
+ * --dont-check-version Skip compatibility check of current and last HANA version
+ * --dont-check-system Skip check for incompatible /proc/sys values
+ * --dont-exit-on-error Halt script on error to allow root cause analysis
+ *
+ * Checking syscalls ...
+ * 	WARNING: Operation not permitted: move_pages
+ * 	WARNING: Operation not permitted: mbind
+ * Check failed: syscalls
+ * Please add permissions for the named operations by whitelisting them in a seccomp profile.
+ * You can get a matching profile by calling 'docker run --rm <hana_image> --print seccomp.json > seccomp.json' and apply it to the container start via 'docker run --security-opt seccomp=seccomp.json ...'.
+ */

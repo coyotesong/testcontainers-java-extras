@@ -1,115 +1,51 @@
-# testcontainers-java-extras
+# testcontainers-java-extras 
 
-This repository contains:
-- JdbcContainer hamcrest matchers
-- additional java TestContainers.
+Additional TestContainer containers.
 
-## Hamcrest Matchers (tentative)
+## SAP HANA Database (extends JdbcDatabase)
 
-[Hamcrest matchers](https://hamcrest.org/) provide a clean way to encapsulate test details. Perhaps more
-importantly they provide a clean way to have a separate implementation of your test code. This eliminates
-the temptation to use the code being tested to both populate and retrieve records. This approach is
-tempting - it eliminates the need for a separate implementation - but is risky since it may approve
-an implementation that's internally consistent but can't be used with anything else.
+SAP HANA, express edition is a streamlined version of the SAP HANA platform which enables developers to jumpstart
+application development in the cloud or personal computer to build and deploy modern applications that use up to
+32GB memory. SAP HANA, express edition includes the in-memory data engine with advanced analytical data processing
+engines for business, text, spatial, and graph data - supporting multiple data models on a single copy of the data.
 
-### Database Hamcrest Matchers
+The software license allows for both non-production and production use cases, enabling you to quickly prototype,
+demo, and deploy next-generation applications using SAP HANA, express edition without incurring any license fees.
+Memory capacity increases beyond 32GB are available for purchase at the SAP Store.
 
-The potential database Hamcrest matchers will be
+JDBC driver: `com.sap.cloud.db.jdbc:ngdbc:2.17.12`
 
-I hope the database matchers will be integrated into the JdbcContainer class. For now they're provided
-via a JdbcMatchers interface so they can be easily added to any existing JDBC TestContainer.
+## Vertica Database (extends JdbcDatabase)
 
-```java
-public interface JdbcMatchers {
-    default Matcher tableExists(String tableName) { .... };
+Vertica is a unified analytics platform, based on a massively scalable architecture with the broadest set of
+nalytical functions spanning event and time series, pattern matching, geospatial and end-to-end in-database
+machine learning. Vertica enables you to easily apply these powerful functions to the largest and most demanding
+analytical workloads, arming you and your customers with predictive business insights faster than any analytics
+ata warehouse in the market. Vertica provides a unified analytics platform across major public clouds and on-premises
+data centers and integrates data in cloud object storage and HDFS without forcing you to move any of your data.
 
-    default Matcher recordExists(String tableName, String query, Object... params) { ... };
+JDBC driver: `com.vertica.jdbc:vertica-jdbc:22.3.0-0`
 
-    // default Matcher recordMatches(String tableName, StrictnessPolicy policy, String query, Object... params) { ... };
-}
-```
+## SQLite Database (extends JdbcDatabase)
 
-There will also be variants that can be used in the `assumeThat()` calls - they can be used to
-prepopulate the test data.
+SQLite is a popular embedded database - it can't be a traditional Container since it can only use
+host resources. However it's so popular on simple webapps, e.g., [Datasette](https://datasette.io/)
+that I felt it was worth creating a psuedo-Container so developers will have access to the
+broader TestContainer ecosystem.
 
-None of the methods are difficult to implement - but it can be difficult to create a fluent
-integration into the JUnit/Hamcrest tests. These matchers allow the details to be hidden so
-the developer can focus on the essence of the tests.
+JDBC driver: `org.xerial:sqlite-jdbc:3.42.0.0`
 
-#### Usage
+## Limitations
 
-A typical usage would be
+### No tests due to absent :jdbc-test
 
-```java
-private MyDatabaseContainer db = new MyDatabaseContainer(...);
+There are no tests yet since I've been unable to find `org.testcontainers:jdbc-test:1.18.3` in a
+public repo. I can't build it locally on Ubuntu LTS but will build it later in a docker container.
 
-public void testTableCreation() throws SQLException {
-    final String TEST_TABLE_NAME = "test_123";
-    assumeThat(not(db.tableExists(TEST_TABLE_NAME)));  // see above
+### Failed login on SAP HANA database
 
-    // call method that creates table
+The SAP HANA container requires the addition of a .json file containing the master password.
+I'm creating that file but haven't found a way to set the ownership and permissions on it.
 
-    assertThat(db.tableExists(TEST_TABLE_NAME));
-}
-```
-
-with
-
-```java
-public class MyDatabaseContainer extends MSSQLContainer implements JdbcMatchers {
-    // passthrough constructors, nothing else required
-}
-``` 
-
-## New Database TestContainers
-
-### Relational Database / Data Warehouse / Big Data
-
-These are cloud-based Big Data / Data Warehouse / etc databases that also provide a docker-based
-implementation for evaluation and testing. The new TestContainers work with the docker-based
-implementation.
-
-- [SAP HANA](https://www.sap.com/products/technology-platform/hana.html)
-- [Teradata](https://www.teradata.com/) (tentative)
-- [Vertica](https://www.vertica.com/)
-
-### Relational Database / Embedded
-
-These are widely used embedded databases.
-
-Somewhat surprisingly both of these databases implement many advanced features, e.g., triggers,
-recursive queries, and common expressions.
-
-- [H2](https://h2database.com/)
-  - Pros: client/server or embedded, easily extended with java-hased UDF and UDT
-  - Cons: 
-- [SQLite](https://www.sqlite.org/index.html)
-  - Pros: extremely popular with docker-based apps like [Datasette](https://datasette.io/)
-  - Cons: requires external software package (e.g., `sqlite3`), limited data types
-
-## Other New TestContainers (tentative)
-
-### Email (tentative)
-
-This Container will provide access to SMTP, POP3, and IMAP services.
-
-### Identity Providers (IdP) (tentative)
-
-I do not plan to offer Microsoft Active Directory (AD) or SAMBA.
-
-IPA / FreeIPA is a Linux-based IdP that can be used in place of MS AD. IPA is a commercial product
-from RedHat, FreeIPA is an open-source subset of it. At the time of this writing it does not
-officially support execution within a Docker container.
-
-LDAP is somewhat interesting since it's often used as part of a broader Identity Provider (IdP).
-At a minimum it should be integrated with a Kerberos KDC since that is a widely used combination.
-
-LDAP can also use a relational database as the backend - this gives you the legacy flexibility
-of LDAP with the development flexibility of a database.
-
-LDAP is also often bundled with DNS since MS Active Directory publishes its resources via
-DNS SRV records.
-
-- OpenLDAP
-- FreeIPA
-
+I suspect the solution will involve creating a separate 'data' volume and adding that file
+to the new volume.
