@@ -1,0 +1,35 @@
+package com.coyotesong.testcontainers.junit.vertica;
+
+import com.coyotesong.testcontainers.VerticaTestImages;
+import com.coyotesong.testcontainers.containers.VerticaContainer;
+
+import org.junit.Test;
+import org.testcontainers.db.AbstractContainerDatabaseTest;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+// disabled until I can figure out how to use ":jdbc-test"
+
+public class SimpleVerticaTest extends AbstractContainerDatabaseTest {
+    static {
+        // Postgres JDBC driver uses JUL; disable it to avoid annoying, irrelevant, stderr logs during connection testing
+        LogManager.getLogManager().getLogger("").setLevel(Level.OFF);
+    }
+
+    @Test
+    public void testSimple() throws SQLException {
+        try (VerticaContainer<?> vertica = new VerticaContainer<>(VerticaTestImages.VERTICA_TEST_IMAGE)) {
+            vertica.start();
+
+            ResultSet resultSet = performQuery(vertica, "SELECT 1");
+            int resultSetInt = resultSet.getInt(1);
+            assertThat(resultSetInt).as("A basic SELECT query succeeds").isEqualTo(1);
+            assertHasCorrectExposedAndLivenessCheckPorts(vertica);
+        }
+    }
+}

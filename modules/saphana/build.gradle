@@ -1,0 +1,13 @@
+description = "Testcontainers-Extras :: JDBC :: SAP HANA"
+
+dependencies {
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+    compileOnly 'com.google.auto.service:auto-service:1.1.1'
+
+    api project(':jdbc')
+
+    // testImplementation('org.testcontainers:jdbc-test')
+    testRuntimeOnly 'com.sap.cloud.db.jdbc:ngdbc:2.17.12'
+
+    compileOnly 'org.jetbrains:annotations:24.0.1'
+}

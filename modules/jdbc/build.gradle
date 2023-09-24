@@ -1,0 +1,14 @@
+description = "Testcontainers-Java-Extras :: JDBC"
+
+dependencies {
+    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+    compileOnly 'com.google.auto.service:auto-service:1.1.1'
+
+    api project(':testcontainers-java-extras')
+    api 'org.testcontainers:jdbc'
+
+    // testImplementation('org.testcontainers:jdbc-test')
+    testRuntimeOnly 'org.slf4j:slf4j-api:2.0.7'
+
+    compileOnly 'org.jetbrains:annotations:24.0.1'
+}

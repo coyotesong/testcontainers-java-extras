@@ -1,0 +1,116 @@
+apply plugin: 'maven-publish'
+
+task sourceJar(type: Jar) {
+    archiveClassifier.set( 'sources')
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier.set('javadoc')
+    from javadoc
+}
+
+// skip this since the shadow plugin isn't working...
+// ----
+// jar.archiveClassifier.set("original")
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) { publication ->
+            artifactId = project.name
+            artifact sourceJar
+            artifact javadocJar
+
+            artifact project.tasks.jar
+            // artifacts.removeAll { it.classifier == jar.archiveClassifier.get() }
+
+            pom.withXml {
+                def rootNode = asNode()
+                def addParent = { name ->
+                    if ([ 'h2', 'saphana', 'sqlite', 'vertica' ].contains(name)) {
+                        def parentNode = rootNode.appendNode('parent')
+                        parentNode.appendNode('groupId', project.group)
+                        parentNode.appendNode('artifactId', "jdbc")
+                        parentNode.appendNode('version', project.version)
+                    }
+                }
+                addParent(project.name)
+
+                rootNode.children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+
+                    name project.description
+                    description 'FIXME'
+                    url 'https://FIXME'
+                    issueManagement {
+                        system 'GitHub'
+                        url 'https://github.com/coyotesong/testcontainers-java-extras/issues'
+                    }
+                    licenses {
+                        license {
+                            name 'MIT'
+                            url 'http://opensource.org/licenses/MIT'
+                        }
+                    }
+                    scm {
+                        url 'https://github.com/coyotesong/testcontainers-java-extras/'
+                        connection 'scm:git:git://github.com/coyotesong/testcontainers-java-extras.git'
+                        developerConnection 'scm:git:ssh://git@github.com/coyotesong/testcontainers-java-extras.git'
+                    }
+                    developers {
+                        developer {
+                            id 'beargiles'
+                            name 'Bear Giles'
+                            email 'bgiles@coyotesong.com'
+                        }
+                    }
+                }
+
+                def dependenciesNode = rootNode.appendNode('dependencies')
+
+                def apiDeps = project.configurations.api.resolvedConfiguration.firstLevelModuleDependencies
+                def providedDeps = project.configurations.provided.resolvedConfiguration.firstLevelModuleDependencies
+                def newApiDeps = apiDeps - providedDeps
+
+                def addDependencies = { Set<ResolvedDependency> resolvedDependencies, scope ->
+                    for (dependency in resolvedDependencies) {
+                        if (dependency.configuration.startsWith("platform-")) {
+                            continue
+                        }
+                        dependenciesNode.appendNode('dependency').with {
+                            if (!dependency.moduleGroup || !dependency.moduleName || !dependency.moduleVersion) {
+                                throw new IllegalStateException("Wrong dependency: $dependency")
+                            }
+
+                            appendNode('groupId', dependency.moduleGroup)
+                            appendNode('artifactId', dependency.moduleName)
+                            appendNode('version', dependency.moduleVersion)
+                            appendNode('scope', scope)
+
+                            if (dependency instanceof ModuleDependency && !dependency.excludeRules.empty) {
+                                def excludesNode = appendNode('exclusions')
+                                for (rule in dependency.excludeRules) {
+                                    excludesNode.appendNode('exclusion').with {
+                                        appendNode('groupId', rule.group)
+                                        appendNode('artifactId', rule.module)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                addDependencies(newApiDeps, 'compile')
+                addDependencies(providedDeps, 'provided')
+            }
+        }
+    }
+    repositories {
+        maven {
+            url("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            credentials {
+                username = System.getenv("OSSRH_USERNAME")
+                password = System.getenv("OSSRH_PASSWORD")
+            }
+        }
+    }
+}
