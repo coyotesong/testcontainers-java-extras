@@ -2,6 +2,11 @@
 
 Additional TestContainer containers.
 
+#### Update (2023-09-26)
+
+I've gotten useful feedback from the TestContainer developers - I should be able to add tests consistent
+with all other TestContainers soon.
+
 ## SAP HANA Database (extends JdbcDatabase)
 
 SAP HANA, express edition is a streamlined version of the SAP HANA platform which enables developers to jumpstart
